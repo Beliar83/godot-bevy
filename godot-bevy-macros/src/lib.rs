@@ -63,8 +63,6 @@ pub fn bevy_app(attr: TokenStream, item: TokenStream) -> TokenStream {
         unsafe impl ExtensionLibrary for BevyExtensionLibrary {
             fn on_level_init(level: godot::prelude::InitLevel) {
                 if level == godot::prelude::InitLevel::Core {
-                    godot::private::class_macros::registry::class::auto_register_classes(level);
-
                     // Store the scene tree configuration
                     let _ = godot_bevy::app::BEVY_APP_CONFIG.set(godot_bevy::app::BevyAppConfig {
                         scene_tree_auto_despawn_children: #scene_tree_auto_despawn_children,
