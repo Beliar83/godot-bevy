@@ -15,12 +15,38 @@ struct Damage {
 }
 
 fn singleton_node(ctx: &TestContext) -> Gd<BevyApp> {
-    ctx.scene_tree
+    #[cfg(any(
+        feature = "api-4-2",
+        feature = "api-4-3",
+        feature = "api-4-4",
+        feature = "api-4-5",
+        feature = "api-4-6",
+        feature = "api-custom-pre-4-7",
+        feature = "api-custom-json-pre-4-7",
+        not(any(
+            feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))
+    ))]
+    return ctx
+        .scene_tree
         .get_tree()
         .get_root()
         .expect("root exists")
         .try_get_node_as::<BevyApp>("BevyAppSingleton")
-        .expect("BevyAppSingleton autoload should exist")
+        .expect("BevyAppSingleton autoload should exist");
+
+    #[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+    return ctx
+        .scene_tree
+        .get_tree()
+        .get_root()
+        .try_get_node_as::<BevyApp>("BevyAppSingleton")
+        .expect("BevyAppSingleton autoload should exist");
 }
 
 fn bridge_node(ctx: &TestContext) -> Gd<godot::classes::Node> {
@@ -641,6 +667,31 @@ fn test_send_event_reentrant_mapper(ctx: &TestContext) -> godot::task::TaskHandl
 
         // Obtain the BevyApp node's InstanceId before registering mappers so we
         // can capture it (Copy) without capturing the Gd<Node>.
+        #[cfg(any(feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))]
+        let bevy_app_iid = scene_tree
+            .get_tree()
+            .get_root()
+            .try_get_node_as::<godot::classes::Node>("BevyAppSingleton")
+            .expect("BevyAppSingleton exists")
+            .instance_id();
+        #[cfg(any(
+            feature = "api-4-6",
+            feature = "api-custom-pre-4-7",
+            feature = "api-custom-json-pre-4-7",
+            not(any(
+                feature = "api-4-2",
+                feature = "api-4-3",
+                feature = "api-4-4",
+                feature = "api-4-5",
+                feature = "api-4-6",
+                feature = "api-4-7",
+                feature = "api-custom",
+                feature = "api-custom-json",
+            ))
+        ))]
         let bevy_app_iid = scene_tree
             .get_tree()
             .get_root()

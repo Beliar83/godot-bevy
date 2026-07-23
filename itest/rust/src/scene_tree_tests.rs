@@ -182,7 +182,26 @@ fn test_reparent_to_root_clears_godot_child_of(ctx: &TestContext) -> godot::task
             "child under a mirrored parent should have GodotChildOf"
         );
 
+        #[cfg(any(
+            feature = "api-4-2",
+            feature = "api-4-3",
+            feature = "api-4-4",
+            feature = "api-4-5",
+            feature = "api-4-6",
+            feature = "api-custom-pre-4-7",
+            feature = "api-custom-json-pre-4-7",
+            not(any(
+                feature = "api-4-7",
+                feature = "api-custom",
+                feature = "api-custom-json",
+            ))
+        ))]
         let root = ctx_clone.scene_tree.get_tree().get_root().unwrap();
+        #[cfg(any(feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))]
+        let root = ctx_clone.scene_tree.get_tree().get_root();
         child
             .clone()
             .reparent(&root.upcast::<godot::classes::Node>());

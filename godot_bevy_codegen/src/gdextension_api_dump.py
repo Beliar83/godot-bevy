@@ -66,6 +66,7 @@ def switch_to_godot_version(godot_version: str) -> None:
         subprocess.run(
             [
                 "gdenv",
+                "godot",
                 "install",
                 godot_version,
             ]
@@ -73,6 +74,7 @@ def switch_to_godot_version(godot_version: str) -> None:
         subprocess.run(
             [
                 "gdenv",
+                "godot",
                 "use",
                 godot_version,
             ]

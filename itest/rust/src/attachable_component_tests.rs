@@ -419,7 +419,26 @@ async fn test_attach_rejects_viewport_parent(ctx: TestContext) {
     let mut app = TestApp::new(&ctx, |_| {}).await;
     let child = carrier("ViewportCarrier", 601);
     let child_id = child.instance_id();
+    #[cfg(any(
+        feature = "api-4-2",
+        feature = "api-4-3",
+        feature = "api-4-4",
+        feature = "api-4-5",
+        feature = "api-4-6",
+        feature = "api-custom-pre-4-7",
+        feature = "api-custom-json-pre-4-7",
+        not(any(
+            feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))
+    ))]
     let mut root = ctx.scene_tree.get_tree().get_root().unwrap();
+    #[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+    let mut root = ctx.scene_tree.get_tree().get_root();
     root.add_child(&child);
     pump(&mut app);
     let indexed = app.has_entity_for_node(child_id);

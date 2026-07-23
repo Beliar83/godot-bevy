@@ -61,13 +61,14 @@ def generate_type_checking_code(
 def generate_node_type_checking_dispatcher(
     output_file: Path,
     versions: list[str],
+    latest_version: str = None
 ) -> None:
     indent_log("🔌 Generating node type checking dispatcher...")
 
     def format_ver(v: str, sep: str) -> str:
         return v.replace(".", sep)
 
-    latest_version = versions[-1]
+    latest_version = latest_version or versions[-1]
 
     content = textwrap.dedent("""\
         // The Godot versions used here are sourced from Godot-Rust's handling of gdextension API differences:

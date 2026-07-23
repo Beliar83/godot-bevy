@@ -2385,6 +2385,7 @@ checksum = "773860a42753be6f8bdc40fe8e0ee169164a83605ab7d6dc0c9b746892cd85ed"
 dependencies = [
  "gdextension-api",
  "nanoserde",
+ "regex",
  "which",
 ]
 
@@ -5563,3 +5564,7 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+
+[[patch.unused]]
+name = "godot"
+version = "0.4.3"

@@ -73,21 +73,17 @@ fn reset_menu_assets(mut menu_assets: ResMut<MenuAssets>) {
 }
 
 fn init_menu_assets(mut menu_assets: ResMut<MenuAssets>, mut scene_tree: SceneTreeRef) {
-    if let Some(root) = scene_tree.get().get_root() {
-        match MenuUi::from_node(root) {
-            Ok(menu_ui) => {
-                info!("MainMenu: Successfully found menu nodes");
-                menu_assets.start_button = Some(menu_ui.start_button);
-                menu_assets.fullscreen_button = Some(menu_ui.fullscreen_button);
-                menu_assets.quit_button = Some(menu_ui.quit_button);
-                menu_assets.initialized = true;
-            }
-            Err(_) => {
-                debug!("MainMenu: Menu nodes not ready yet, will retry next frame");
-            }
+    match MenuUi::from_node(scene_tree.get().get_root()) {
+        Ok(menu_ui) => {
+            info!("MainMenu: Successfully found menu nodes");
+            menu_assets.start_button = Some(menu_ui.start_button);
+            menu_assets.fullscreen_button = Some(menu_ui.fullscreen_button);
+            menu_assets.quit_button = Some(menu_ui.quit_button);
+            menu_assets.initialized = true;
         }
-    } else {
-        debug!("MainMenu: Scene root not available yet");
+        Err(_) => {
+            debug!("MainMenu: Menu nodes not ready yet, will retry next frame");
+        }
     }
 }
 

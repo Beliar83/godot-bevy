@@ -12,7 +12,7 @@ path = "run_godot.rs"
 name = "godot_bevy_itest"
 
 [features]
-default = []
+default = ["api-4-7"]
 test-frame-signal = ["godot-bevy/test-frame-signal", "godot-bevy-test/test-frame-signal"]
 autosync-tests = []
 harness-probes = []
@@ -23,7 +23,16 @@ profile-tracy = [
     "godot-bevy/trace_tracy",
     "godot-bevy-test/profile-tracy",
 ]
-
+api-4-2 = ["godot-bevy/api-4-2"]
+api-4-3 = ["godot-bevy/api-4-3"]
+api-4-4 = ["godot-bevy/api-4-4"]
+api-4-5 = ["godot-bevy/api-4-5"]
+api-4-6 = ["godot-bevy/api-4-6"]
+api-4-7 = ["godot-bevy/api-4-7"]
+api-custom-pre-4-7 = ["godot/api-custom"]
+api-custom-json-pre-4-7 = ["godot/api-custom-json"]
+api-custom = ["godot/api-custom"]
+api-custom-json = ["godot/api-custom-json"]
 [dependencies]
 godot = { workspace = true, features = ["__trace"] }
 godot-bevy = { path = "../../godot-bevy", features = ["register-docs"] }

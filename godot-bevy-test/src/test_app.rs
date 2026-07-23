@@ -86,7 +86,10 @@ impl TestApp {
         await_frame().await; // A previous test's cleanup may still be pending.
 
         let scene_tree = ctx.scene_tree.get_tree();
+        #[cfg(not(feature = "api-4-7"))]
         let root = scene_tree.get_root().expect("Root should exist");
+        #[cfg(feature = "api-4-7")]
+        let root = scene_tree.get_root();
         let mut bevy_app = root
             .try_get_node_as::<godot_bevy::BevyApp>("BevyAppSingleton")
             .expect("BevyAppSingleton autoload not found. Enable the godot-bevy plugin in Project Settings > Plugins, or add BevyAppSingleton as an autoload.");

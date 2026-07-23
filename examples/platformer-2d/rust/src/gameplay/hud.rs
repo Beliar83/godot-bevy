@@ -53,7 +53,7 @@ fn on_level_loaded_setup_hud(
 ) {
     let event = trigger.event();
 
-    let root = scene_tree.get().get_root().unwrap();
+    let root = scene_tree.get().get_root();
     let hud_ui = HudUi::from_node(root).unwrap();
     hud_handles.current_level_label = Some(hud_ui.current_level_label);
     hud_handles.gems_label = Some(hud_ui.gems_label);

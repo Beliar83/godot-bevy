@@ -141,12 +141,39 @@ impl BevyApp {
 
     /// Resolves the `/root/BevyAppSingleton` autoload — `None` in the editor or
     /// before the autoload exists.
+    #[cfg(any(
+        feature = "api-4-6",
+        feature = "api-custom-pre-4-7",
+        feature = "api-custom-json-pre-4-7",
+        not(any(
+            feature = "api-4-2",
+            feature = "api-4-3",
+            feature = "api-4-4",
+            feature = "api-4-5",
+            feature = "api-4-6",
+            feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",        
+        ))
+    ))]
     pub fn try_singleton() -> Option<Gd<BevyApp>> {
         godot::classes::Engine::singleton()
             .get_main_loop()?
             .try_cast::<godot::classes::SceneTree>()
             .ok()?
             .get_root()?
+            .try_get_node_as::<BevyApp>("BevyAppSingleton")
+    }
+    #[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+    pub fn try_singleton() -> Option<Gd<BevyApp>> {
+        godot::classes::Engine::singleton()
+            .get_main_loop()?
+            .try_cast::<godot::classes::SceneTree>()
+            .ok()?
+            .get_root()
             .try_get_node_as::<BevyApp>("BevyAppSingleton")
     }
 

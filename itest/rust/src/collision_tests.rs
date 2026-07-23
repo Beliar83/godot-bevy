@@ -51,7 +51,26 @@ fn find_collision_watcher(
     scene_tree: &Gd<godot::classes::Node>,
 ) -> Option<Gd<godot::classes::Node>> {
     let tree = scene_tree.get_tree();
+    #[cfg(any(
+        feature = "api-4-2",
+        feature = "api-4-3",
+        feature = "api-4-4",
+        feature = "api-4-5",
+        feature = "api-4-6",
+        feature = "api-custom-pre-4-7",
+        feature = "api-custom-json-pre-4-7",
+        not(any(
+            feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))
+    ))]
     let root = tree.get_root()?;
+    #[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+    let root = tree.get_root();
     root.try_get_node_as::<godot::classes::Node>("BevyAppSingleton/CollisionWatcher")
 }
 

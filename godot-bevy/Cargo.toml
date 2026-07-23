@@ -48,7 +48,7 @@ tracing-tracy = {version = "0.11.4", default-features = false, features = [
 ], optional = true}
 
 [features]
-default = ["bevy_gamepad", "godot_bevy_log", "experimental-threads"]
+default = ["bevy_gamepad", "godot_bevy_log", "experimental-threads", "api-4-7"]
 # Enable Bevy's gamepad support via gilrs
 bevy_gamepad = ["dep:bevy_gilrs"]
 godot_bevy_log = ["dep:chrono", "dep:bevy_log"]
@@ -63,6 +63,11 @@ api-4-3 = ["godot/api-4-3"]
 api-4-4 = ["godot/api-4-4"]
 api-4-5 = ["godot/api-4-5"]
 api-4-6 = ["godot/api-4-6"]
+api-4-7 = ["godot/api-4-7"]
+api-custom-pre-4-7 = ["godot/api-custom"]
+api-custom-json-pre-4-7 = ["godot/api-custom-json"]
+api-custom = ["godot/api-custom"]
+api-custom-json = ["godot/api-custom-json"]
 experimental-godot-api = ["godot/experimental-godot-api"]
 register-docs = ["godot/register-docs"]
 # Web/WASM support (experimental)

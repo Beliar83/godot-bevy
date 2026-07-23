@@ -239,7 +239,27 @@ fn spawn_scene(
                 parent.add_child(&instance);
             }
             None => {
+                #[cfg(any(
+                    feature = "api-4-6",
+                    feature = "api-custom-pre-4-7",
+                    feature = "api-custom-json-pre-4-7",
+                    not(any(
+                        feature = "api-4-2",
+                        feature = "api-4-3",
+                        feature = "api-4-4",
+                        feature = "api-4-5",
+                        feature = "api-4-6",
+                        feature = "api-4-7",
+                        feature = "api-custom",
+                        feature = "api-custom-json",
+                    ))
+                ))]
                 scene_tree.get().get_root().unwrap().add_child(&instance);
+                #[cfg(any(feature = "api-4-7",
+                    feature = "api-custom",
+                    feature = "api-custom-json",
+                ))]
+                scene_tree.get().get_root().add_child(&instance);
             }
         }
 

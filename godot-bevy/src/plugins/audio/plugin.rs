@@ -378,7 +378,32 @@ fn process_play_command(
     };
 
     if let Some(handle) = player_handle {
+        #[cfg(any(
+            feature = "api-4-6",
+            feature = "api-custom-pre-4-7",
+            feature = "api-custom-json-pre-4-7",
+            not(any(
+                feature = "api-4-2",
+                feature = "api-4-3",
+                feature = "api-4-4",
+                feature = "api-4-5",
+                feature = "api-4-6",
+                feature = "api-4-7",
+                feature = "api-custom",
+                feature = "api-custom-json",
+            ))
+        ))]
         if let Some(mut root) = scene_tree.get().get_root() {
+            let node = godot.get::<godot::classes::Node>(handle);
+            root.add_child(&node);
+        }
+        #[cfg(any(feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))]
+        {
+            let mut root = scene_tree.get().get_root();
+            // Get the node from the handle and add it to the scene tree
             let node = godot.get::<godot::classes::Node>(handle);
             root.add_child(&node);
         }

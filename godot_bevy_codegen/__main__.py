@@ -74,7 +74,8 @@ def main() -> None:
     # https://github.com/godot-rust/gdext/blob/3f1d543580c1817f1b7fab57a400e82b50085581/godot-bindings/src/import.rs
     # Check the main branch for latest versions: https://github.com/godot-rust/gdext/blob/master/godot-bindings/src/import.rs
     # Note: godot-rust 0.5 removed patch-level API features (e.g. api-4-2-1). Only minor versions are supported.
-    api_versions = ["4.2", "4.3", "4.4", "4.5", "4.6"]
+    api_versions = ["4.2", "4.3", "4.4", "4.5", "4.6", "4.7"]
+    default_version = "4.6"
 
     try:
         for api_version in api_versions:
@@ -82,13 +83,13 @@ def main() -> None:
             generate_for_version(api_version)
 
         generate_node_type_checking_dispatcher(
-            FilePaths.type_checking_dispatcher_file, api_versions
+            FilePaths.type_checking_dispatcher_file, api_versions, default_version
         )
         generate_node_markers_dispatcher(
-            FilePaths.node_markers_dispatcher_file, api_versions
+            FilePaths.node_markers_dispatcher_file, api_versions, default_version
         )
         generate_signal_names_dispatcher(
-            FilePaths.signal_names_dispatcher_file, api_versions
+            FilePaths.signal_names_dispatcher_file, api_versions, default_version
         )
 
         rust_files = [

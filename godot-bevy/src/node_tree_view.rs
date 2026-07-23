@@ -31,7 +31,27 @@ pub fn find_node_by_pattern(
 ) -> Option<godot::obj::Gd<godot::classes::Node>> {
     let (search_root, pattern_parts) = if let Some(stripped) = pattern.strip_prefix('/') {
         let scene_tree = base_node.get_tree();
+        #[cfg(any(
+            feature = "api-4-6",
+            feature = "api-custom-pre-4-7",
+            feature = "api-custom-json-pre-4-7",
+            not(any(
+                feature = "api-4-2",
+                feature = "api-4-3",
+                feature = "api-4-4",
+                feature = "api-4-5",
+                feature = "api-4-6",
+                feature = "api-4-7",
+                feature = "api-custom",
+                feature = "api-custom-json",
+            ))
+        ))]
         let root = scene_tree.get_root()?;
+        #[cfg(any(feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",
+        ))]
+        let root = scene_tree.get_root();
         let root_as_node = root.upcast::<godot::classes::Node>();
         let mut parts: Vec<&str> = stripped.split('/').filter(|s| !s.is_empty()).collect();
 

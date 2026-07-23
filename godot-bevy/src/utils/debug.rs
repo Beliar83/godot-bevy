@@ -16,7 +16,27 @@ pub fn print_tree_structure(node: Gd<Node>, indent_level: usize) {
 
 /// Prints the entire scene tree structure starting from the root node.
 pub fn print_scene_tree(scene_tree: &mut SceneTreeRef) {
+    #[cfg(any(
+        feature = "api-4-6",
+        feature = "api-custom-pre-4-7",
+        feature = "api-custom-json-pre-4-7",
+        not(any(
+            feature = "api-4-2",
+            feature = "api-4-3",
+            feature = "api-4-4",
+            feature = "api-4-5",
+            feature = "api-4-6",
+            feature = "api-4-7",
+            feature = "api-custom",
+            feature = "api-custom-json",        
+        ))
+    ))]
     let root = scene_tree.get().get_root().unwrap();
+    #[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+    let root = scene_tree.get().get_root();
     godot_print!("Scene Tree Structure:");
     print_tree_structure(root.upcast(), 0);
 }

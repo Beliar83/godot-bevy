@@ -10,6 +10,7 @@ categories.workspace = true
 license.workspace = true
 
 [features]
+default = ["api-4-7"]
 test-frame-signal = ["godot-bevy/test-frame-signal"]
 profile-tracy = [
     "dep:tracing",
@@ -18,6 +19,12 @@ profile-tracy = [
     "godot-bevy/trace_bevy",
     "godot-bevy/trace_tracy",
 ]
+api-4-2 = ["godot-bevy/api-4-2"]
+api-4-3 = ["godot-bevy/api-4-3"]
+api-4-4 = ["godot-bevy/api-4-4"]
+api-4-5 = ["godot-bevy/api-4-5"]
+api-4-6 = ["godot-bevy/api-4-6"]
+api-4-7 = ["godot-bevy/api-4-7"]
 
 [dependencies]
 godot = { workspace = true, features = ["__trace"] }
