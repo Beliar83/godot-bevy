@@ -1,3 +1,4 @@
+use super::autosync::AttachComponentFn;
 use super::node_type_checking::{
     add_node_type_markers_from_string, remove_comprehensive_node_type_markers,
 };
@@ -36,7 +37,7 @@ use godot::{
 };
 use parking_lot::Mutex;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 use std::rc::Rc;
 use tracing::{debug, trace, warn};
@@ -168,6 +169,7 @@ impl Plugin for GodotSceneTreePlugin {
     fn build(&self, app: &mut App) {
         super::autosync::register_all_autosync_bundles(app);
         super::autosync::register_all_required_components(app);
+        super::autosync::register_all_attach_components(app);
 
         app.init_non_send::<SceneTreeRefImpl>()
             .init_resource::<NodeEntityIndex>()
@@ -638,6 +640,8 @@ fn create_scene_tree_entity(
     let collision_watcher = get_bevy_app_child("CollisionWatcher");
 
     let mut pending_collision_bodies: Vec<(Gd<Node>, u8, ColliderKind)> = Vec::new();
+    let mut carriers = Vec::new();
+    let mut carrier_ids = HashSet::new();
 
     for message in messages.into_iter() {
         trace!(target: "godot_scene_tree_messages", message = ?message);
@@ -669,26 +673,32 @@ fn create_scene_tree_entity(
                     .map(|(_, _, _, decorated)| decorated)
                     .unwrap_or(false);
 
-                let mut new_entity_commands = if let Some(ent) = existing_entity {
-                    commands.entity(ent)
-                } else {
-                    commands.spawn_empty()
-                };
-
                 let mut node_accessor = godot.node(node_handle);
                 let mut node = node_accessor.get::<Node>();
-
                 let node_name = node_name.unwrap_or_else(|| node.get_name().to_string());
 
                 let new_entity = if already_decorated {
-                    new_entity_commands.insert((node_id, Name::from(node_name)));
-                    new_entity_commands.id()
+                    let entity = existing_entity.unwrap();
+                    commands
+                        .entity(entity)
+                        .insert((node_id, Name::from(node_name)));
+                    entity
                 } else {
-                    let class_hierarchy = get_inheritance_hierarchy(
-                        node_type
-                            .unwrap_or_else(|| node.get_class().to_string())
-                            .as_str(),
-                    );
+                    let class_name = node_type.unwrap_or_else(|| node.get_class().to_string());
+                    let metadata = get_class_metadata(&class_name);
+                    if let Some(attach) = metadata.attach_component {
+                        if carrier_ids.insert(instance_id) {
+                            carriers.push((node_handle, class_name, attach));
+                        }
+                        continue;
+                    }
+
+                    let mut new_entity_commands = if let Some(ent) = existing_entity {
+                        commands.entity(ent)
+                    } else {
+                        commands.spawn_empty()
+                    };
+                    let class_hierarchy = &metadata.hierarchy;
                     // The first matching arm inserts the whole ancestor-marker chain in one
                     // move, so stop -- continuing would redundantly re-insert those markers. An
                     // unknown leaf (e.g. a GDExtension class) returns false and falls through to
@@ -758,12 +768,14 @@ fn create_scene_tree_entity(
                     new_entity
                 };
 
-                // Reconcile GodotChildOf with the node's current parent (the point of a reparent
-                // NodeAdded): link to a mirrored parent, else drop any stale edge.
                 let parent_id = parent_id_from_gdscript
                     .or_else(|| node.get_parent().map(|parent| parent.instance_id()))
                     .filter(|parent_id| *parent_id != scene_root.instance_id());
-                match parent_id.and_then(|parent_id| node_index.get(parent_id)) {
+                let parent = parent_id.and_then(|parent_id| node_index.get(parent_id));
+
+                // Reconcile GodotChildOf with the node's current parent (the point of a reparent
+                // NodeAdded): link to a mirrored parent, else drop any stale edge.
+                match parent {
                     Some(parent_entity) => {
                         commands
                             .entity(new_entity)
@@ -815,6 +827,67 @@ fn create_scene_tree_entity(
         }
     }
 
+    // Same-batch parents must enter the index before carriers resolve their destination.
+    for (handle, class_name, attach) in carriers {
+        let Some(mut node) = godot.try_get::<Node>(handle) else {
+            continue;
+        };
+        if node.is_queued_for_deletion() {
+            continue;
+        }
+        let parent = node.get_parent();
+        let destination = (|| {
+            if !node.is_inside_tree() {
+                return Err("carrier is outside the scene tree");
+            }
+            if node.has_meta("_bevy_exclude")
+                || parent.as_ref().is_some_and(is_excluded_from_mirror)
+            {
+                return Err("carrier or parent is excluded from mirroring");
+            }
+            if node.get_child_count_ex().include_internal(true).done() != 0 {
+                return Err("carrier has children (including internal children)");
+            }
+            let parent = parent.as_ref().ok_or("carrier has no parent")?;
+            if parent.instance_id() == scene_root.instance_id() {
+                return Err("parent is the root viewport");
+            }
+            if parent.is_queued_for_deletion() {
+                return Err("parent is queued for deletion");
+            }
+            if get_class_metadata(&parent.get_class().to_string())
+                .attach_component
+                .is_some()
+            {
+                return Err("parent is an attachable component carrier");
+            }
+            node_index
+                .get(parent.instance_id())
+                .ok_or("parent is not mirrored")
+        })();
+        let failure = match destination {
+            Ok(entity) if attach(commands, entity, godot, handle) => {
+                node.queue_free();
+                continue;
+            }
+            Ok(_) => "component conversion failed",
+            Err(reason) => reason,
+        };
+        let path = |node: &Gd<Node>| {
+            if node.is_inside_tree() {
+                node.get_path().to_string()
+            } else {
+                format!("<outside tree>/{}", node.get_name())
+            }
+        };
+        warn!(target: "godot_scene_tree_messages",
+            class = %class_name,
+            path = %path(&node),
+            parent = %parent.as_ref().map(path).unwrap_or_else(|| "<none>".to_string()),
+            reason = failure,
+            "AttachableComponent rejected");
+    }
+
     if !pending_collision_bodies.is_empty()
         && let Some(ref collision_watcher) = collision_watcher
     {
@@ -822,18 +895,20 @@ fn create_scene_tree_entity(
     }
 }
 
-/// Inheritance chain for a Godot class (class then ancestors). Memoized per
-/// class name: the chain is static and scenes have few distinct classes, so we
-/// walk `ClassDb` once per class, not per node; `Rc` avoids reallocating on hits.
-/// Main-thread only (holds `GodotAccess`), so the thread-local cache is lock-free.
-fn get_inheritance_hierarchy(class_name: &str) -> Rc<Vec<String>> {
+struct ClassMetadata {
+    hierarchy: Vec<String>,
+    attach_component: Option<AttachComponentFn>,
+}
+
+/// Class metadata is static; the main-thread cache avoids repeated ClassDb and registry lookups.
+fn get_class_metadata(class_name: &str) -> Rc<ClassMetadata> {
     thread_local! {
-        static CACHE: RefCell<HashMap<String, Rc<Vec<String>>>> = RefCell::new(HashMap::new());
+        static CACHE: RefCell<HashMap<String, Rc<ClassMetadata>>> = RefCell::new(HashMap::new());
     }
 
     CACHE.with(|cache| {
-        if let Some(hierarchy) = cache.borrow().get(class_name) {
-            return hierarchy.clone();
+        if let Some(metadata) = cache.borrow().get(class_name) {
+            return metadata.clone();
         }
 
         let class_db = ClassDb::singleton();
@@ -844,11 +919,14 @@ fn get_inheritance_hierarchy(class_name: &str) -> Rc<Vec<String>> {
             current_class = class_db.get_parent_class(&current_class);
         }
 
-        let hierarchy = Rc::new(hierarchy);
+        let metadata = Rc::new(ClassMetadata {
+            hierarchy,
+            attach_component: super::autosync::attach_component_for_class(class_name),
+        });
         cache
             .borrow_mut()
-            .insert(class_name.to_string(), hierarchy.clone());
-        hierarchy
+            .insert(class_name.to_string(), metadata.clone());
+        metadata
     })
 }
 

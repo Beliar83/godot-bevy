@@ -560,4 +560,59 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn attachable_component_success() {
+        let di: syn::DeriveInput = parse_quote! {
+            #[derive(AttachableComponent, GodotClass)]
+            #[class(init, base=Node)]
+            #[gdbevy(target = Movement)]
+            struct MovementComponent {
+                #[export]
+                max_speed: f32,
+            }
+        };
+        let tokens = parse_attachable_component(&di).unwrap();
+        let code = tokens.to_string();
+
+        // Verify the target type, struct name, and the generated function name are present
+        assert!(code.contains("Movement"));
+        assert!(code.contains("MovementComponent"));
+        assert!(code.contains("__movementcomponent"));
+    }
+
+    #[test]
+    fn attachable_component_missing_target() {
+        let di: syn::DeriveInput = parse_quote! {
+            #[derive(AttachableComponent, GodotClass)]
+            #[class(init, base=Node)]
+            struct MovementComponent {
+                #[export]
+                max_speed: f32,
+            }
+        };
+        let err = parse_attachable_component(&di).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("Missing #[gdbevy(target = YourBevyComponent)] attribute")
+        );
+    }
+
+    #[test]
+    fn attachable_component_unsupported_property() {
+        let di: syn::DeriveInput = parse_quote! {
+            #[derive(AttachableComponent, GodotClass)]
+            #[class(init, base=Node)]
+            #[gdbevy(foo = "bar")]
+            struct MovementComponent {
+                #[export]
+                max_speed: f32,
+            }
+        };
+        let err = parse_attachable_component(&di).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("unsupported property, expected `target`")
+        );
+    }
 }

@@ -9,6 +9,7 @@ mod coverage_flush;
 godot_bevy_test::declare_test_runner!();
 
 mod asset_reader_tests;
+mod attachable_component_tests;
 mod autosync_match_tests;
 mod benchmarks;
 mod collision_tests;

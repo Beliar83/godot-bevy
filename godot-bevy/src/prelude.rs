@@ -25,8 +25,9 @@ pub use crate::plugins::{
     },
     packed_scene::{GodotPackedScenePlugin, GodotScene},
     scene_tree::{
-        AutoSyncBundleRegistry, GodotChildOf, GodotChildren, GodotRequiredComponents,
-        GodotSceneTreePlugin, Groups, NodeEntityIndex, SceneTreeConfig, SceneTreeRef,
+        AttachComponentRegistry, AutoSyncBundleRegistry, GodotChildOf, GodotChildren,
+        GodotRequiredComponents, GodotSceneTreePlugin, Groups, NodeEntityIndex, SceneTreeConfig,
+        SceneTreeRef,
     },
     signals::{DeferredSignalConnections, GodotSignals, GodotSignalsPlugin},
     transforms::{

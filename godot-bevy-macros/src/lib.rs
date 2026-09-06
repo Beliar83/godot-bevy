@@ -3,7 +3,9 @@ mod emit;
 mod godot_node;
 mod node_tree_view;
 
-use crate::godot_node::{derive_bevy_components, derive_godot_node_component};
+use crate::godot_node::{
+    derive_attachable_component, derive_bevy_components, derive_godot_node_component,
+};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::Parser;
@@ -340,6 +342,91 @@ pub fn derive_bevy_components_entry(item: TokenStream) -> TokenStream {
 pub fn component_as_godot_node(input: TokenStream) -> TokenStream {
     let parsed: DeriveInput = parse_macro_input!(input as DeriveInput);
     derive_godot_node_component(parsed)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
+}
+
+/// Attach a component to a parent entity from an editor-authored Godot node.
+///
+/// Derive `AttachableComponent` alongside `GodotClass`, set
+/// `#[gdbevy(target = YourComponent)]`, and implement `From<&YourGodotClass>`
+/// for that Bevy component. `GodotCorePlugins` registers the carrier automatically.
+///
+/// The carrier must be a leaf under a mirrored node. After ordinary scene-tree
+/// messages are processed, the conversion runs once against the carrier's live
+/// parent. The component is inserted on that parent's entity and the carrier is
+/// queued for deletion. The carrier never gets its own entity.
+///
+/// This is one-shot configuration. Carrier nodes and their paths disappear.
+/// Removing and re-adding the surviving parent does not restore the component.
+/// Instantiate the saved scene again to get fresh carriers. Use `BevyComponents`
+/// when the authored node should survive and receive components on its own entity.
+///
+/// Children, including internal children, cause rejection before `From` runs.
+/// The parent cannot be another carrier, the root viewport, excluded, queued for
+/// deletion, or missing from the mirror. Rejected carriers stay alive and
+/// unmirrored. A warning gives the class, path, parent, and reason. Another
+/// `NodeAdded` is required for a new attempt; empty drains do not retry.
+/// Detached, freed, or queued carriers do not convert. Excluded subtrees normally
+/// produce no add messages.
+///
+/// `From` may copy values, retain owned resources, and capture handles to nodes
+/// that survive independently. Do not capture the carrier, its descendants,
+/// other carriers, or paths through consumed nodes. Do not mutate the scene tree
+/// in `From`. Use `GodotAccess::try_get` when a captured node may have been freed.
+///
+/// # Example
+///
+/// Assign `character_body` to a surviving parent or sibling in the Inspector.
+///
+/// <!-- qualification-doctest: scaffold=book-tests/src/doctest_scaffolds.rs#attachable_component -->
+/// ```rust,ignore
+/// use bevy::prelude::{Component, Vec2};
+/// use godot::classes::CharacterBody3D;
+/// use godot::obj::OnEditor;
+/// use godot::prelude::*;
+/// use godot_bevy::prelude::*;
+///
+/// #[derive(AttachableComponent, GodotClass)]
+/// #[class(init, base=Node)]
+/// #[gdbevy(target = Movement)]
+/// struct MovementComponent {
+///     #[export]
+///     max_speed: f32,
+///     #[export]
+///     jump_height: f32,
+///     #[export]
+///     character_body: OnEditor<Gd<CharacterBody3D>>,
+/// }
+///
+/// #[derive(Component)]
+/// struct Movement {
+///     max_speed: f32,
+///     jump_height: f32,
+///     character_body_3d: GodotNodeHandle,
+///     desired_direction: Vec2,
+/// }
+///
+/// impl From<&MovementComponent> for Movement {
+///     fn from(value: &MovementComponent) -> Movement {
+///         Movement {
+///             max_speed: value.max_speed,
+///             jump_height: value.jump_height,
+///             character_body_3d: GodotNodeHandle::new(value.character_body.clone()),
+///             desired_direction: Vec2::ZERO,
+///         }
+///     }
+/// }
+/// ```
+///
+/// # Struct-level attributes
+///
+/// `#[gdbevy(target = Comp)]` is required. `Comp` is the Bevy component to insert
+/// on the parent and must implement `From<&YourGodotClass>`.
+#[proc_macro_derive(AttachableComponent, attributes(gdbevy))]
+pub fn derive_attachable_component_entry(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    derive_attachable_component(input)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
