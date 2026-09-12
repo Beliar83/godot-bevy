@@ -2,6 +2,7 @@
 
 pub mod debug;
 pub mod math;
+pub mod scene_tree;
 
 pub use math::{clamp_to_range, is_reasonable_float, lerp, move_toward, normalize_angle};
 

@@ -41,6 +41,7 @@ use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 use std::rc::Rc;
 use tracing::{debug, trace, warn};
+use crate::utils::scene_tree::SceneTreeExtensions;
 
 /// A resource that maintains an O(1) lookup from Godot `InstanceId` to Bevy `Entity`.
 ///
@@ -281,7 +282,7 @@ fn initialize_scene_tree(
     message_reader: Res<SceneTreeMessageReader>,
     mut godot: GodotAccess,
 ) {
-    let root = scene_tree.get().get_root().unwrap();
+    let root = scene_tree.get().get_root_expect();
 
     let optimized_watcher = get_bevy_app_child("OptimizedSceneTreeWatcher");
 
@@ -483,7 +484,7 @@ fn get_bevy_app_child(child_name: &str) -> Option<Gd<Node>> {
     let scene_tree = Engine::singleton()
         .get_main_loop()
         .and_then(|ml| ml.try_cast::<SceneTree>().ok())?;
-    let root = scene_tree.get_root()?;
+    let root = scene_tree.get_root_as_option()?;
     find_node_by_name(&root.upcast(), &StringName::from(child_name))
 }
 
@@ -634,7 +635,7 @@ fn create_scene_tree_entity(
 ) {
     // Resolve entities via the complete NodeEntityIndex (in-loop inserts below
     // plus the GodotNodeHandle hooks), avoiding an O(world) scan per batch.
-    let scene_root = scene_tree.get().get_root().unwrap();
+    let scene_root = scene_tree.get().get_root_expect();
 
     // CollisionWatcher is optional - only required if GodotCollisionsPlugin is added
     let collision_watcher = get_bevy_app_child("CollisionWatcher");

@@ -26,6 +26,7 @@ use godot::{
 use std::collections::HashMap;
 use std::str::FromStr;
 use tracing::error;
+use crate::utils::scene_tree::SceneTreeExtensions;
 
 #[derive(Default)]
 pub struct GodotPackedScenePlugin;
@@ -239,7 +240,7 @@ fn spawn_scene(
                 parent.add_child(&instance);
             }
             None => {
-                scene_tree.get().get_root().unwrap().add_child(&instance);
+                scene_tree.get().get_root_expect().add_child(&instance);
             }
         }
 

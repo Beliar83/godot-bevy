@@ -8,6 +8,7 @@ use godot_bevy::plugins::scene_tree::{
 use godot_bevy::prelude::*;
 use godot_bevy_test::prelude::*;
 use std::cell::RefCell;
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 
 #[derive(bevy::prelude::Component, PartialEq, Debug, Default)]
 pub struct TestMovement {
@@ -419,7 +420,7 @@ async fn test_attach_rejects_viewport_parent(ctx: TestContext) {
     let mut app = TestApp::new(&ctx, |_| {}).await;
     let child = carrier("ViewportCarrier", 601);
     let child_id = child.instance_id();
-    let mut root = ctx.scene_tree.get_tree().get_root().unwrap();
+    let mut root = ctx.scene_tree.get_tree().get_root_as_option().unwrap();
     root.add_child(&child);
     pump(&mut app);
     let indexed = app.has_entity_for_node(child_id);

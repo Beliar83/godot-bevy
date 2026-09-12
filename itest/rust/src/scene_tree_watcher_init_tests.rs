@@ -1,11 +1,12 @@
 use godot::prelude::*;
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 use godot_bevy_test::prelude::*;
 
 fn find_bevy_app_node(
     scene_tree_node: &Gd<godot::classes::Node>,
 ) -> Option<Gd<godot::classes::Node>> {
     let tree = scene_tree_node.get_tree();
-    let root = tree.get_root()?;
+    let root = tree.get_root_as_option()?;
     root.try_get_node_as::<godot::classes::Node>("BevyAppSingleton")
 }
 

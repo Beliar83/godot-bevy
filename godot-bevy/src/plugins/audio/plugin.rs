@@ -21,6 +21,7 @@ use godot::obj::NewAlloc;
 use std::collections::{HashMap, VecDeque};
 use thiserror::Error;
 use tracing::{trace, warn};
+use crate::utils::scene_tree::SceneTreeExtensions;
 
 /// Plugin that provides a comprehensive audio API using Godot's audio system.
 /// Supports 2D, 3D, and non-positional audio with channels, tweening, and spatial features.
@@ -378,7 +379,7 @@ fn process_play_command(
     };
 
     if let Some(handle) = player_handle {
-        if let Some(mut root) = scene_tree.get().get_root() {
+        if let Some(mut root) = scene_tree.get().get_root_as_option() {
             let node = godot.get::<godot::classes::Node>(handle);
             root.add_child(&node);
         }

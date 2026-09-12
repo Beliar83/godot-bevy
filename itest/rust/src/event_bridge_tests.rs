@@ -8,6 +8,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicI32, Ordering::SeqCst},
 };
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 
 #[derive(Event, Debug, Clone)]
 struct Damage {
@@ -17,8 +18,7 @@ struct Damage {
 fn singleton_node(ctx: &TestContext) -> Gd<BevyApp> {
     ctx.scene_tree
         .get_tree()
-        .get_root()
-        .expect("root exists")
+        .get_root_expect()
         .try_get_node_as::<BevyApp>("BevyAppSingleton")
         .expect("BevyAppSingleton autoload should exist")
 }
@@ -643,8 +643,7 @@ fn test_send_event_reentrant_mapper(ctx: &TestContext) -> godot::task::TaskHandl
         // can capture it (Copy) without capturing the Gd<Node>.
         let bevy_app_iid = scene_tree
             .get_tree()
-            .get_root()
-            .expect("root exists")
+            .get_root_expect()
             .try_get_node_as::<godot::classes::Node>("BevyAppSingleton")
             .expect("BevyAppSingleton exists")
             .instance_id();

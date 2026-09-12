@@ -16,6 +16,11 @@ mod type_checking4_4;
 mod type_checking4_5;
 #[cfg(feature = "api-4-6")]
 mod type_checking4_6;
+#[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+mod type_checking4_7;
 
 #[cfg(feature = "api-4-2")]
 pub use type_checking4_2::*;
@@ -27,6 +32,11 @@ pub use type_checking4_4::*;
 pub use type_checking4_5::*;
 #[cfg(feature = "api-4-6")]
 pub use type_checking4_6::*;
+#[cfg(any(feature = "api-4-7",
+        feature = "api-custom",
+        feature = "api-custom-json",
+    ))]
+pub use type_checking4_7::*;
 
 #[cfg(not(any(
     feature = "api-4-2",
@@ -34,6 +44,7 @@ pub use type_checking4_6::*;
     feature = "api-4-4",
     feature = "api-4-5",
     feature = "api-4-6",
+    feature = "api-4-7",
     feature = "api-custom",
     feature = "api-custom-json",
 )))]
@@ -44,6 +55,7 @@ mod type_checking4_6;
     feature = "api-4-4",
     feature = "api-4-5",
     feature = "api-4-6",
+    feature = "api-4-7",
     feature = "api-custom",
     feature = "api-custom-json",
 )))]

@@ -3,6 +3,7 @@ use godot::obj::{InstanceId, NewAlloc};
 use godot::prelude::*;
 use godot_bevy::plugins::scene_tree::ProtectedNodeEntity;
 use godot_bevy::prelude::*;
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 use godot_bevy_test::prelude::*;
 
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
@@ -182,7 +183,7 @@ fn test_reparent_to_root_clears_godot_child_of(ctx: &TestContext) -> godot::task
             "child under a mirrored parent should have GodotChildOf"
         );
 
-        let root = ctx_clone.scene_tree.get_tree().get_root().unwrap();
+        let root = ctx_clone.scene_tree.get_tree().get_root_expect();
         child
             .clone()
             .reparent(&root.upcast::<godot::classes::Node>());

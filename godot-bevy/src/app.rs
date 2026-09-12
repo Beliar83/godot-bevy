@@ -11,6 +11,7 @@ use godot::prelude::*;
 #[cfg(feature = "test-frame-signal")]
 use std::sync::Mutex;
 use std::sync::OnceLock;
+use crate::utils::scene_tree::SceneTreeExtensions;
 
 pub static BEVY_INIT_FUNC: OnceLock<Box<dyn Fn(&mut App) + Send + Sync>> = OnceLock::new();
 
@@ -146,7 +147,7 @@ impl BevyApp {
             .get_main_loop()?
             .try_cast::<godot::classes::SceneTree>()
             .ok()?
-            .get_root()?
+            .get_root_as_option()?
             .try_get_node_as::<BevyApp>("BevyAppSingleton")
     }
 

@@ -12,6 +12,7 @@ use godot::classes::{
 };
 use godot::prelude::*;
 use godot_bevy::prelude::*;
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 use godot_bevy_test::prelude::*;
 
 fn collisions_contains(app: &mut TestApp, a: Entity, b: Entity) -> bool {
@@ -51,7 +52,7 @@ fn find_collision_watcher(
     scene_tree: &Gd<godot::classes::Node>,
 ) -> Option<Gd<godot::classes::Node>> {
     let tree = scene_tree.get_tree();
-    let root = tree.get_root()?;
+    let root = tree.get_root_as_option()?;
     root.try_get_node_as::<godot::classes::Node>("BevyAppSingleton/CollisionWatcher")
 }
 

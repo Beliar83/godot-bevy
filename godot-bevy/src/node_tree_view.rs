@@ -1,4 +1,5 @@
 use thiserror::Error;
+use crate::utils::scene_tree::SceneTreeExtensions;
 
 #[non_exhaustive]
 #[derive(Debug, Error)]
@@ -31,7 +32,7 @@ pub fn find_node_by_pattern(
 ) -> Option<godot::obj::Gd<godot::classes::Node>> {
     let (search_root, pattern_parts) = if let Some(stripped) = pattern.strip_prefix('/') {
         let scene_tree = base_node.get_tree();
-        let root = scene_tree.get_root()?;
+        let root = scene_tree.get_root_as_option()?;
         let root_as_node = root.upcast::<godot::classes::Node>();
         let mut parts: Vec<&str> = stripped.split('/').filter(|s| !s.is_empty()).collect();
 

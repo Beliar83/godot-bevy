@@ -12,7 +12,7 @@ use bevy::{
 };
 use godot_bevy::interop::signal_names::BaseButtonSignals;
 use godot_bevy::prelude::*;
-
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 use crate::{
     GameState,
     commands::{UICommand, UIElement, UIHandles},
@@ -59,7 +59,7 @@ fn init_menu_assets(
     mut ui_handles: ResMut<UIHandles>,
     mut scene_tree: SceneTreeRef,
 ) {
-    let menu_ui = MenuUi::from_node(scene_tree.get().get_root().unwrap()).unwrap();
+    let menu_ui = MenuUi::from_node(scene_tree.get().get_root_expect()).unwrap();
 
     menu_assets.message_label = Some(menu_ui.message_label);
     menu_assets.start_button = Some(menu_ui.start_button);

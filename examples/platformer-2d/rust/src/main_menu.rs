@@ -20,6 +20,7 @@ use bevy::{
 use godot::classes::{Button, DisplayServer, display_server::WindowMode};
 use godot_bevy::interop::signal_names::BaseButtonSignals;
 use godot_bevy::prelude::*;
+use godot_bevy::utils::scene_tree::SceneTreeExtensions;
 
 #[derive(Resource, Default)]
 pub struct MenuAssets {
@@ -73,7 +74,7 @@ fn reset_menu_assets(mut menu_assets: ResMut<MenuAssets>) {
 }
 
 fn init_menu_assets(mut menu_assets: ResMut<MenuAssets>, mut scene_tree: SceneTreeRef) {
-    if let Some(root) = scene_tree.get().get_root() {
+    if let Some(root) = scene_tree.get().get_root_as_option() {
         match MenuUi::from_node(root) {
             Ok(menu_ui) => {
                 info!("MainMenu: Successfully found menu nodes");
